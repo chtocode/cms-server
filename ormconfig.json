@@ -6,5 +6,8 @@
     "password": "honey_badger",
     "database": "cms",
     "entities": ["dist/**/*.entity{.ts,.js}"],
-    "synchronize": true
+    "synchronize": true,
+    "cache": true,
+    "logging": ["error"],
+    "logger": "file"
 }

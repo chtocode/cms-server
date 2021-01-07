@@ -12,8 +12,11 @@ export class UsersService {
         private readonly userRepo: Repository<UserEntity>,
     ) {}
 
-    async findOne(email: string): Promise<UserEntity | undefined> {
-        return this.userRepo.findOne({ email });
+    async findOne(
+        condition: Partial<Pick<UserEntity, 'id' | 'email'>>,
+        relations?: string[],
+    ): Promise<UserEntity | undefined> {
+        return this.userRepo.findOne(condition, { relations });
     }
 
     async create({ email, role, password }: CreateUserDto): Promise<Partial<UserEntity>> {

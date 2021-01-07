@@ -10,7 +10,8 @@
             "name": "Debug Nest Framework",
             "sourceMaps": true,
             "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
+            "protocol": "inspector",
+            "restart": true
         }
     ]
 }

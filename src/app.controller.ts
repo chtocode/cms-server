@@ -1,13 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
-import { AuthService } from './auth/auth.service';
+import { Controller, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 @Controller()
 export class AppController {
-    constructor(private readonly appService: AppService, private authService: AuthService) {}
+    constructor() {}
 
     @Get()
-    getHello(): string {
-        return this.appService.getHello();
+    index(@Res() response: Response) {
+        response.type('text/html').send(readFileSync(join(__dirname, '..', '/client/index.html')).toString());
     }
 }

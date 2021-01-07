@@ -4,4 +4,5 @@ export enum IApiTags {
     Teachers = 'Teachers',
     Managers = 'Managers',
     Users = 'Users',
+    Message = 'message',
 }

@@ -10,6 +10,6 @@ export class CreateUserDto {
     @ApiProperty()
     readonly password: string;
 
-    @ApiProperty()
+    @ApiProperty({ enum: [Role.Manager, Role.Student, Role.Teacher] })
     readonly role: Role;
 }
