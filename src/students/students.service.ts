@@ -1,26 +1,151 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { omitBy } from 'lodash';
+import { Connection, Repository } from 'typeorm';
+import { TeacherEntity } from '../teachers/entities/teacher.entity';
+import { CourseEntity } from './../course/entities/course.entity';
+import { CourseShort } from './../course/model/course.model';
+import { UsersService } from './../users/users.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { StudentProfileEntity } from './entities/student-profile.entity';
+import { StudentTypeEntity } from './entities/student-type.entity';
+import { StudentEntity } from './entities/student.entity';
+import { Student, StudentProfile, StudentsResponse } from './model/students.model';
 
 @Injectable()
 export class StudentsService {
-    create(createStudentDto: CreateStudentDto) {
-        return 'This action adds a new student';
+    constructor(
+        @InjectRepository(StudentEntity) private studentEntity: Repository<StudentEntity>,
+        @InjectRepository(StudentProfileEntity) private studentProfileEntity: Repository<StudentProfileEntity>,
+        @InjectRepository(StudentTypeEntity) private studentTypeEntity: Repository<StudentTypeEntity>,
+        private usersService: UsersService,
+        private connection: Connection,
+    ) {}
+
+    async create(createStudentDto: CreateStudentDto): Promise<Student> {
+        const { name, email, country } = createStudentDto;
+        const profile = this.studentProfileEntity.create({ name, email, country });
+        const type = await this.studentTypeEntity.findOne({ id: createStudentDto.type });
+        const { profile: _1, deletedAt: _2, ...student } = await this.studentEntity.save({
+            name,
+            email,
+            country,
+            type,
+            profile,
+        });
+
+        return this.transformStudentEntityToResponse({ ...(student as StudentEntity), courses: [], type });
     }
 
-    findAll() {
-        return `This action returns all students`;
+    async findAllBelongTeacher(userId: number, page: number, limit: number, query = ''): Promise<StudentsResponse> {
+        const user = await this.usersService.findOne({ id: userId });
+        const teacher = await this.connection.getRepository(TeacherEntity).findOne({ email: user.email });
+        const courses = await this.connection
+            .getRepository(CourseEntity)
+            .createQueryBuilder('course')
+            .where(`course.teacherId = ${teacher.id}`)
+            .select('course.id')
+            .getMany();
+        const courseIds = courses.map(({ id }) => id).join(',');
+        const total = await this.studentEntity
+            .createQueryBuilder('student')
+            .innerJoin('student.courses', 'courses')
+            .where(`courses.course IN (${courseIds})`)
+            .getCount();
+        const result = await this.studentEntity
+            .createQueryBuilder('student')
+            .innerJoinAndSelect('student.courses', 'courses')
+            .innerJoinAndSelect('courses.course', 'course')
+            .leftJoinAndSelect('student.type', 'type')
+            .where(`student.name LIKE :param AND courses.courseId IN (${courseIds})`)
+            .setParameters({ param: '%' + query + '%' })
+            .offset((page - 1) * limit)
+            .limit(limit)
+            .getMany();
+        const students: Student[] = result.map(this.transformStudentEntityToResponse);
+
+        return { total, students, paginator: { page, limit } };
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} student`;
+    async findAll(page: number, limit: number, query = ''): Promise<StudentsResponse> {
+        const total = await this.studentEntity
+            .createQueryBuilder('student')
+            .where('student.name LIKE :param')
+            .setParameters({
+                param: '%' + query + '%',
+            })
+            .getCount();
+        const result = await this.studentEntity
+            .createQueryBuilder('student')
+            .leftJoinAndSelect('student.courses', 'courses')
+            .leftJoinAndSelect('courses.course', 'course')
+            .leftJoinAndSelect('student.type', 'type')
+            .where('student.name LIKE :param')
+            .setParameters({
+                param: '%' + query + '%',
+            })
+            .offset((page - 1) * limit)
+            .limit(limit)
+            .getMany();
+        const students: Student[] = result.map(this.transformStudentEntityToResponse);
+
+        return { total, students, paginator: { page, limit } };
     }
 
-    update(id: number, updateStudentDto: UpdateStudentDto) {
-        return `This action updates a #${id} student`;
+    async findOne(
+        id: number,
+    ): Promise<
+        Student<CourseShort & { name: string; courseId: number; type: string; studentId: number }> & StudentProfile
+    > {
+        const { profile, type, courses, ...others } = await this.studentEntity.findOne(
+            { id },
+            { relations: ['type', 'courses', 'profile', 'profile.interest', 'courses.course'] },
+        );
+        const { id: profileId, interest, ...restProfile } = profile;
+
+        return {
+            ...others,
+            ...restProfile,
+            typeId: type.id,
+            typeName: type.name,
+            courses: courses.map(({ course, ...other }) => ({
+                ...other,
+                name: course.name,
+                courseId: course.id,
+                type: '', // TODO course type
+                studentId: id,
+            })),
+            interest: interest.map((item) => item.name),
+        };
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} student`;
+    async update(id: number, updateStudentDto: UpdateStudentDto): Promise<Student> {
+        const { name, country, email, type: typeId } = updateStudentDto;
+        const type = await this.studentTypeEntity.findOne({ id: typeId });
+        const values = omitBy({ name, country, email, type }, (item) => !item);
+
+        await this.studentEntity.update(id, values);
+
+        const result = await this.studentEntity.findOne({ id }, { relations: ['type', 'courses', 'courses.course'] });
+
+        return this.transformStudentEntityToResponse(result);
     }
+
+    async remove(id: number): Promise<boolean> {
+        const { raw } = await this.studentEntity.softDelete({ id });
+
+        return raw.affectedRows >= 1;
+    }
+
+    private transformStudentEntityToResponse = (student: StudentEntity): Student => {
+        const { courses, type, ...other } = student;
+
+        return {
+            ...other,
+            typeId: type.id,
+            typeName: type.name,
+            courses: courses.map(({ course, id }) => ({ id, courseId: course.id, name: course.name })),
+        };
+    };
 }

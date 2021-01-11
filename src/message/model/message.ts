@@ -1,3 +1,4 @@
+import { ListResponse } from '../../shared/model/shared.model';
 import { UserEntity } from '../../users/entities/user.entity';
 
 export type MessageType = 'notification' | 'message';
@@ -14,10 +15,8 @@ export interface Message {
 /**
  * --------- message response ----------
  */
-export interface MessageResponse {
-    total: number;
+export interface MessageResponse extends ListResponse {
     messages: Message[];
-    paginator: { page: number; limit: number };
 }
 
 /**

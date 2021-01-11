@@ -1,23 +1,77 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+    BadRequestException,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    UseGuards,
+    UseInterceptors
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IApiTags } from '../config/api-tags';
+import { TransformInterceptor } from '../interceptors/response.interceptors';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentsService } from './students.service';
 
 @Controller('students')
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(TransformInterceptor)
 @ApiTags(IApiTags.Students)
+@ApiBearerAuth()
 export class StudentsController {
     constructor(private readonly studentsService: StudentsService) {}
 
-    @Post()
+    @Post('add')
     create(@Body() createStudentDto: CreateStudentDto) {
         return this.studentsService.create(createStudentDto);
     }
 
     @Get()
-    findAll() {
-        return this.studentsService.findAll();
+    @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
+    @ApiQuery({ name: 'query', type: 'string', description: 'student name', required: false })
+    @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: false })
+    @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: false })
+    findAll(
+        @Query('query') query: string,
+        @Query('userId') userId: number,
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Req() req,
+    ) {
+        if (!userId) {
+            userId = req.user.userId;
+        }
+
+        const role = req.user.role;
+
+        if (role === 'manager') {
+            /**
+             * Manager can all students or the students belongs to certain teacher;
+             */
+            if (!userId || userId === req.user.userId) {
+                return this.studentsService.findAll(page, limit, query);
+            } else {
+                return this.studentsService.findAllBelongTeacher(userId, page, limit, query);
+            }
+        } else if (role === 'teacher') {
+            /**
+             * Teachers can view all the students who have taken their courses;
+             */
+            if (!!userId && userId !== req.user.userId) {
+                throw new BadRequestException('Permission denied!');
+            } else {
+                return this.studentsService.findAllBelongTeacher(req.user.userId, page, limit, query);
+            }
+        } else {
+            throw new BadRequestException('Permission denied!');
+        }
     }
 
     @Get(':id')

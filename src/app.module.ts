@@ -12,6 +12,7 @@ import { StudentsModule } from './students/students.module';
 import { TeachersModule } from './teachers/teachers.module';
 import { UsersModule } from './users/users.module';
 import { validate } from './utils/env.validation';
+import { CourseModule } from './course/course.module';
 
 const envFilePath: string | string[] = process.env.NODE_ENV === 'production' ? '.env' : '.dev.env';
 
@@ -34,6 +35,7 @@ const envFilePath: string | string[] = process.env.NODE_ENV === 'production' ? '
         TeachersModule,
         TypeOrmModule.forRoot(),
         UsersModule,
+        CourseModule,
     ],
     controllers: [AppController],
     providers: [AppService],

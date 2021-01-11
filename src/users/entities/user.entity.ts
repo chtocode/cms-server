@@ -26,7 +26,9 @@ export class UserEntity extends EntityWithTimeStamp {
     @Column()
     iv: string;
 
-    @Column()
+    @Column({
+        default: Math.random().toString(36).split('.')[1],
+    })
     nickname: string;
 
     @OneToMany(() => MessageEntity, message => message.to )

@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         email: string;
         exp: number;
         iat: number;
-    }): Promise<{ email: string; userId: number }> {
-        return { userId: payload.id, email: payload.email };
+    }): Promise<{ email: string; userId: number; role: Role }> {
+        return { userId: payload.id, email: payload.email, role: payload.role };
     }
 }
