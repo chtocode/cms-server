@@ -1,6 +1,5 @@
-import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { StudentProfileEntity } from '../../students/entities/student-profile.entity';
-import { TeacherSkillEntity } from '../../teachers/entities/teacher-skill.entity';
 
 @Entity()
 export class CourseTypeEntity {
@@ -12,7 +11,4 @@ export class CourseTypeEntity {
 
     @ManyToMany(() => StudentProfileEntity)
     students: StudentProfileEntity[];
-
-    @OneToMany(() => TeacherSkillEntity, skill => skill.courseTypes)
-    skills: TeacherSkillEntity[]
 }

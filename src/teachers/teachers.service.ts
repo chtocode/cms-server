@@ -1,26 +1,153 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTeacherDto } from './dto/create-teacher.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Connection, EntityManager, Repository } from 'typeorm';
+import { UsersService } from '../users/users.service';
+import { CourseTypeEntity } from './../course/entities/course-type.entity';
+import { CreateTeacherDto, SkillDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
+import { TeacherEduEntity, TeacherProfileEntity } from './entities/teacher-profile.entity';
+import { TeacherSkillEntity } from './entities/teacher-skill.entity';
+import { TeacherEntity } from './entities/teacher.entity';
+import { Teacher, TeachersResponse } from './model/teachers.model';
 
 @Injectable()
 export class TeachersService {
-    create(createTeacherDto: CreateTeacherDto) {
-        return 'This action adds a new teacher';
+    constructor(
+        @InjectRepository(TeacherEntity) private teacherRepo: Repository<TeacherEntity>,
+        @InjectRepository(TeacherProfileEntity) private teacherProfileRepo: Repository<TeacherProfileEntity>,
+        @InjectRepository(TeacherEduEntity) private teacherEduRepo: Repository<TeacherEduEntity>,
+        @InjectRepository(TeacherSkillEntity) private teacherSkillRepo: Repository<TeacherSkillEntity>,
+        private usersService: UsersService,
+        private connection: Connection,
+    ) {}
+
+    /**
+     * ```json
+     * {
+            "name": "zhang3",
+            "country": "china",
+            "phone": "111111",
+            "skills": [
+                {
+                    "name": "java",
+                    "level": 4
+                },
+                {
+                    "name": "c#",
+                    "level": 5
+                }
+            ],
+            "email": "111@a.com"
+        }
+     * ```
+     */
+    async create(createTeacherDto: CreateTeacherDto, manager: EntityManager): Promise<Teacher> {
+        const { name, email, country, phone } = createTeacherDto;
+        const profile = this.teacherProfileRepo.create({});
+        const skills = await this.getSkills(createTeacherDto.skills, manager);
+        const { profile: _1, deletedAt: _2, ...others } = await this.teacherRepo.save({
+            skills,
+            name,
+            email,
+            country,
+            phone,
+            profile,
+        });
+
+        return this.transformTeacherEntityToResponse({ ...(others as TeacherEntity) });
     }
 
-    findAll() {
-        return `This action returns all teachers`;
+    async findAll(page: number, limit: number, query = ''): Promise<TeachersResponse> {
+        const total = await this.teacherRepo
+            .createQueryBuilder('teacher')
+            .where('teacher.name LIKE :param')
+            .setParameters({
+                param: '%' + query + '%',
+            })
+            .getCount();
+        const result = await this.teacherRepo
+            .createQueryBuilder('teacher')
+            .leftJoinAndSelect('teacher.courses', 'courses')
+            .leftJoinAndSelect('teacher.skills', 'skills')
+            .leftJoinAndSelect('skills.courseType', 'courseType')
+            .where('teacher.name LIKE :param')
+            .setParameters({
+                param: '%' + query + '%',
+            })
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getMany();
+        const teachers: Teacher[] = result.map(this.transformTeacherEntityToResponse);
+
+        return { total, teachers, paginator: { page, limit } };
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} teacher`;
+    async findOne(id: number): Promise<Teacher> {
+        const teacher = await this.teacherRepo.findOne(id, { relations: ['courses', 'skills', 'skills.courseType'] });
+
+        return teacher ? this.transformTeacherEntityToResponse(teacher) : null;
     }
 
-    update(id: number, updateTeacherDto: UpdateTeacherDto) {
-        return `This action updates a #${id} teacher`;
+    async update(id: number, updateTeacherDto: UpdateTeacherDto, manager: EntityManager): Promise<Teacher> {
+        const { name, email, country, phone } = updateTeacherDto;
+        let skills = null;
+
+        if (updateTeacherDto.skills) {
+            skills = await this.getSkills(updateTeacherDto.skills, manager);
+        }
+
+        const updateValues = skills?.length ? { skills, name, email, country, phone } : { name, email, country, phone };
+        const teacher = await this.teacherRepo.findOne(id);
+
+        await this.teacherRepo.save({ ...teacher, ...updateValues });
+
+        return this.findOne(id);
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} teacher`;
+    async remove(id: number): Promise<boolean> {
+        const { raw } = await this.teacherRepo.softDelete({ id });
+
+        return raw.affectedRows >= 1;
+    }
+
+    private transformTeacherEntityToResponse = (teacher: Omit<TeacherEntity, 'setComputed'>): Teacher => {
+        const { skills, courses, ...other } = teacher;
+
+        return {
+            ...other,
+            skills: skills.map((item) => ({ name: item.courseType.name, level: item.level })),
+        };
+    };
+
+    private async getSkills(skills: SkillDto[], manager: EntityManager): Promise<TeacherSkillEntity[]> {
+        const skillNames = skills.map((skill) => skill.name);
+        const exist = await manager
+            .getRepository(CourseTypeEntity)
+            .find({ where: skillNames.map((name) => ({ name })) });
+        const toCreate = skills.filter((skill) => !exist.find((item) => item.name === skill.name));
+        const courseType = manager.getRepository(CourseTypeEntity);
+        const teacherSkillRepo = manager.getRepository(TeacherSkillEntity);
+        let skillsExist: TeacherSkillEntity[] = [];
+        let skillsFresh: TeacherSkillEntity[] = [];
+
+        if (exist && exist.length) {
+            skillsExist = skills.map((skill) => {
+                const courseType = exist.find(({ name }) => name === skill.name);
+
+                return teacherSkillRepo.create({ level: skill.level, courseType });
+            });
+        }
+
+        if (toCreate && toCreate.length) {
+            const toCreateCourseTypeEntities = toCreate.map((type) => courseType.create({ name: type.name }));
+
+            skillsFresh = skills.map((skill) => {
+                const courseType = toCreateCourseTypeEntities.find(({ name }) => name === skill.name);
+
+                return teacherSkillRepo.create({ level: skill.level, courseType });
+            });
+        }
+
+        return [...skillsExist, ...skillsFresh];
     }
 }

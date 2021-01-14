@@ -13,22 +13,29 @@ export class TeacherProfileEntity extends EntityWithTimeStamp {
     /**
      * string split with comma; e.g 'province, city, xian';
      */
-    @Column()
+    @Column({
+        nullable: true,
+    })
     address: string;
 
     @Column({
         type: 'enum',
         enum: Gender,
+        nullable: true,
     })
     gender: number;
 
-    @Column({ type: 'date', transformer: transformer })
+    @Column({ type: 'date', transformer: transformer, nullable: true })
     birthday: Date;
 
-    @Column()
+    @Column({
+        nullable: true,
+    })
     avatar: string;
 
-    @Column()
+    @Column({
+        nullable: true,
+    })
     description: string;
 
     @OneToMany(() => WorkExpEntity, (exp) => exp.teacherProfile)
