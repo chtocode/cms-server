@@ -16,18 +16,18 @@ import { Student, StudentProfile, StudentsResponse } from './model/students.mode
 @Injectable()
 export class StudentsService {
     constructor(
-        @InjectRepository(StudentEntity) private studentEntity: Repository<StudentEntity>,
-        @InjectRepository(StudentProfileEntity) private studentProfileEntity: Repository<StudentProfileEntity>,
-        @InjectRepository(StudentTypeEntity) private studentTypeEntity: Repository<StudentTypeEntity>,
+        @InjectRepository(StudentEntity) private studentRepo: Repository<StudentEntity>,
+        @InjectRepository(StudentProfileEntity) private studentProfileRepo: Repository<StudentProfileEntity>,
+        @InjectRepository(StudentTypeEntity) private studentTypeRepo: Repository<StudentTypeEntity>,
         private usersService: UsersService,
         private connection: Connection,
     ) {}
 
     async create(createStudentDto: CreateStudentDto): Promise<Student> {
         const { name, email, country } = createStudentDto;
-        const profile = this.studentProfileEntity.create({ name, email, country });
-        const type = await this.studentTypeEntity.findOne({ id: createStudentDto.type });
-        const { profile: _1, deletedAt: _2, ...student } = await this.studentEntity.save({
+        const profile = this.studentProfileRepo.create({ name, email, country });
+        const type = await this.studentTypeRepo.findOne({ id: createStudentDto.type });
+        const { profile: _1, deletedAt: _2, ...student } = await this.studentRepo.save({
             name,
             email,
             country,
@@ -48,20 +48,20 @@ export class StudentsService {
             .select('course.id')
             .getMany();
         const courseIds = courses.map(({ id }) => id).join(',');
-        const total = await this.studentEntity
+        const total = await this.studentRepo
             .createQueryBuilder('student')
             .innerJoin('student.courses', 'courses')
             .where(`courses.course IN (${courseIds})`)
             .getCount();
-        const result = await this.studentEntity
+        const result = await this.studentRepo
             .createQueryBuilder('student')
             .innerJoinAndSelect('student.courses', 'courses')
             .innerJoinAndSelect('courses.course', 'course')
             .leftJoinAndSelect('student.type', 'type')
             .where(`student.name LIKE :param AND courses.courseId IN (${courseIds})`)
             .setParameters({ param: '%' + query + '%' })
-            .offset((page - 1) * limit)
-            .limit(limit)
+            .skip((page - 1) * limit)
+            .take(limit)
             .getMany();
         const students: Student[] = result.map(this.transformStudentEntityToResponse);
 
@@ -69,14 +69,14 @@ export class StudentsService {
     }
 
     async findAll(page: number, limit: number, query = ''): Promise<StudentsResponse> {
-        const total = await this.studentEntity
+        const total = await this.studentRepo
             .createQueryBuilder('student')
             .where('student.name LIKE :param')
             .setParameters({
                 param: '%' + query + '%',
             })
             .getCount();
-        const result = await this.studentEntity
+        const result = await this.studentRepo
             .createQueryBuilder('student')
             .leftJoinAndSelect('student.courses', 'courses')
             .leftJoinAndSelect('courses.course', 'course')
@@ -85,8 +85,8 @@ export class StudentsService {
             .setParameters({
                 param: '%' + query + '%',
             })
-            .offset((page - 1) * limit)
-            .limit(limit)
+            .skip((page - 1) * limit)
+            .take(limit)
             .getMany();
         const students: Student[] = result.map(this.transformStudentEntityToResponse);
 
@@ -98,7 +98,7 @@ export class StudentsService {
     ): Promise<
         Student<CourseShort & { name: string; courseId: number; type: string; studentId: number }> & StudentProfile
     > {
-        const { profile, type, courses, ...others } = await this.studentEntity.findOne(
+        const { profile, type, courses, ...others } = await this.studentRepo.findOne(
             { id },
             { relations: ['type', 'courses', 'profile', 'profile.interest', 'courses.course'] },
         );
@@ -122,18 +122,18 @@ export class StudentsService {
 
     async update(id: number, updateStudentDto: UpdateStudentDto): Promise<Student> {
         const { name, country, email, type: typeId } = updateStudentDto;
-        const type = await this.studentTypeEntity.findOne({ id: typeId });
+        const type = await this.studentTypeRepo.findOne({ id: typeId });
         const values = omitBy({ name, country, email, type }, (item) => !item);
 
-        await this.studentEntity.update(id, values);
+        await this.studentRepo.update(id, values);
 
-        const result = await this.studentEntity.findOne({ id }, { relations: ['type', 'courses', 'courses.course'] });
+        const result = await this.studentRepo.findOne({ id }, { relations: ['type', 'courses', 'courses.course'] });
 
         return this.transformStudentEntityToResponse(result);
     }
 
     async remove(id: number): Promise<boolean> {
-        const { raw } = await this.studentEntity.softDelete({ id });
+        const { raw } = await this.studentRepo.softDelete({ id });
 
         return raw.affectedRows >= 1;
     }

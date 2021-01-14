@@ -18,7 +18,7 @@ export class UserEntity extends EntityWithTimeStamp {
 
     @Column()
     @IsEnum(Role)
-    role: string;
+    role: Role;
 
     @Column()
     key: string;

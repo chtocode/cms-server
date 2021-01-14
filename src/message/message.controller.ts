@@ -28,7 +28,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 import { Message, MessageType } from './model/message';
 
-@Controller('message')
+@Controller(IApiTags.Message.toLowerCase())
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiTags(IApiTags.Message)

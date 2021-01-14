@@ -1,12 +1,20 @@
+import { ListResponse } from '../../shared/model/shared.model';
+import { Sales } from './sales.model';
+
 export interface CourseShort {
     id: number;
     name: string;
     courseId: number;
 }
 
-type DurationUnit = 1 | 2 | 3 | 4 | 5;
+export type DurationUnit = 1 | 2 | 3 | 4 | 5;
 
 type CourseStatus = 0 | 1 | 2;
+
+export interface CourseType {
+    id: number;
+    name: string;
+}
 
 export interface Course {
     id: number;
@@ -23,7 +31,30 @@ export interface Course {
     cover: string;
     teacherName: string;
     teacherId: number;
-    typeName: string;
-    typeId: number;
+    type: CourseType[];
     scheduleId: number;
+}
+
+export interface CourseResponse extends ListResponse {
+    courses: Course[];
+}
+
+export interface Chapter {
+    name: string;
+    id: number;
+    content: string;
+    order: number;
+}
+
+export interface Schedule {
+    id: number;
+    status: number;
+    current: number;
+    chapters: Chapter[];
+    classTime: string[];
+}
+
+export interface CourseDetailResponse extends Course {
+    sales: Sales;
+    schedule: Schedule;
 }

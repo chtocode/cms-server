@@ -20,7 +20,7 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentsService } from './students.service';
 
-@Controller('students')
+@Controller(IApiTags.Students.toLowerCase())
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiTags(IApiTags.Students)

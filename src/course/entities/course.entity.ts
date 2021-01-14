@@ -2,6 +2,7 @@ import {
     Column,
     Entity,
     JoinColumn,
+    JoinTable,
     ManyToMany,
     ManyToOne,
     OneToMany,
@@ -10,10 +11,12 @@ import {
 } from 'typeorm';
 import { EntityWithTimeStamp, transformer } from '../../base/entity';
 import { TeacherEntity } from '../../teachers/entities/teacher.entity';
-import { CourseStatus } from '../constant/course';
+import { DurationUnit } from './../model/course.model';
 import { CourseScheduleEntity } from './course-schedule.entity';
 import { CourseTypeEntity } from './course-type.entity';
 import { SalesEntity } from './sales.entity';
+
+export type  CourseStatus = 0 | 1 | 2;
 
 @Entity()
 export class CourseEntity extends EntityWithTimeStamp {
@@ -29,8 +32,11 @@ export class CourseEntity extends EntityWithTimeStamp {
     @Column()
     duration: number;
 
-    @Column()
-    durationUnit: number;
+    @Column({
+        type: 'enum',
+        enum: [1, 2, 3, 4, 5],
+    })
+    durationUnit: DurationUnit;
 
     @Column()
     maxStudents: number;
@@ -44,7 +50,9 @@ export class CourseEntity extends EntityWithTimeStamp {
     @Column()
     uid: string;
 
-    @Column()
+    @Column({
+        default: 0
+    })
     star: number;
 
     @Column({ type: 'date', transformer: transformer })
@@ -52,21 +60,25 @@ export class CourseEntity extends EntityWithTimeStamp {
 
     @Column({
         type: 'enum',
-        enum: CourseStatus,
+        enum: [0, 1, 2],
     })
-    status: number;
+    status: CourseStatus;
 
-    @OneToMany(() => SalesEntity, (sales) => sales.course )
+    @OneToMany(() => SalesEntity, (sales) => sales.course)
     sales: SalesEntity[];
 
-    @OneToOne(() => CourseScheduleEntity)
-    @JoinColumn()
+    // add column explicitly here
+    @Column({ name: 'scheduleId' })
+    scheduleId: number;
+
+    @OneToOne(() => CourseScheduleEntity, { cascade: true })
+    @JoinColumn({ name: 'scheduleId' })
     schedule: CourseScheduleEntity;
 
-    @ManyToOne(() => TeacherEntity, (teacher) => teacher.courses)
+    @ManyToOne(() => TeacherEntity, (teacher) => teacher.courses, { cascade: true })
     teacher: TeacherEntity;
 
-    @ManyToMany(() => CourseTypeEntity)
-    @JoinColumn()
+    @ManyToMany(() => CourseTypeEntity, { cascade: true })
+    @JoinTable()
     type: CourseTypeEntity[];
 }

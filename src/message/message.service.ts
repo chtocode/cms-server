@@ -41,8 +41,8 @@ export class MessageService {
         const total = await this.messageRepo.count({ where });
         const messages = (await (this.selectMsg()
             .where(where)
-            .offset((page - 1) * limit)
-            .limit(limit)
+            .skip((page - 1) * limit)
+            .take(limit)
             .getMany() as unknown)) as Message[];
 
         return { total, messages, paginator: { page, limit } };
