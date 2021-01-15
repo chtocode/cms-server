@@ -13,8 +13,9 @@ export class StudentProfileEntity extends EntityWithTimeStamp {
 
     @Column({
         nullable: true,
+        type: 'simple-array'
     })
-    address: string;
+    address: string[];
 
     @Column({
         nullable: true,
@@ -46,7 +47,7 @@ export class StudentProfileEntity extends EntityWithTimeStamp {
     })
     gender: number;
 
-    @ManyToMany(() => CourseTypeEntity)
+    @ManyToMany(() => CourseTypeEntity, {cascade: true })
     @JoinTable()
     interest: CourseTypeEntity[];
 

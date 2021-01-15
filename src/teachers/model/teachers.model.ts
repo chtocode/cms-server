@@ -1,5 +1,5 @@
 import { Course } from '../../course/model/course.model';
-import { ListResponse } from '../../shared/model/shared.model';
+import { DateRangeResponse, ListResponse } from '../../shared/model/shared.model';
 
 export interface Teacher {
     id: number;
@@ -26,7 +26,7 @@ export interface TeacherProfile {
     id: number;
     address: string[];
     gender: number;
-    birthday: string;
+    birthday: string | Date;
     avatar: string;
     description: string;
     workExperience: WorkExperience[];
@@ -38,13 +38,13 @@ export interface TeacherResponse extends Teacher {
     courses?: Course[];
 }
 
-export interface Education {
-    level: string;
+export interface Education extends DateRangeResponse {
+    level: number;
     degree: string;
     startEnd: string;
 }
 
-export interface WorkExperience {
+export interface WorkExperience extends DateRangeResponse {
     company: string;
     post: string;
     startEnd: string;

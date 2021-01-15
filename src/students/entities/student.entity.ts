@@ -19,7 +19,7 @@ export class StudentEntity extends EntityWithTimeStamp {
     @Column()
     name: string;
 
-    @ManyToOne(() => StudentTypeEntity, { cascade: true})
+    @ManyToOne(() => StudentTypeEntity, { cascade: true })
     type: StudentTypeEntity;
 
     @Column({
@@ -30,7 +30,14 @@ export class StudentEntity extends EntityWithTimeStamp {
     @OneToMany(() => StudentCourseEntity, (studentCourse) => studentCourse.student)
     courses: StudentCourseEntity[];
 
+    @Column({
+        name: 'profileId',
+    })
+    profileId: number;
+    
     @OneToOne(() => StudentProfileEntity, { cascade: true })
-    @JoinColumn()
+    @JoinColumn({
+        name: 'profileId',
+    })
     profile: StudentProfileEntity;
 }

@@ -1,32 +1,42 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { Chapter } from '../model/course.model';
-import { IApiTags } from './../../config/api-tags';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateCourseDto } from './create-course.dto';
 
-@ApiTags(IApiTags.Courses)
 export class UpdateCourseDto extends PartialType(CreateCourseDto) {
     @ApiProperty()
     id: number;
 }
 
-@ApiTags(IApiTags.Courses)
 export class UpdateScheduleDto {
-    @ApiProperty()
+    @ApiPropertyOptional()
     scheduleId?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     courseId?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     current?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     status?: number;
 
+    @ApiPropertyOptional()
+    chapters?: Partial<ChapterDto>[];
+
+    @ApiPropertyOptional()
+    classTime?: string[];
+}
+
+export class ChapterDto {
     @ApiProperty()
-    chapters: Partial<Chapter>[];
+    name: string;
+
+    @ApiPropertyOptional()
+    id: number;
 
     @ApiProperty()
-    classTime: string[];
+    content: string;
+
+    @ApiProperty()
+    order: number;
 }

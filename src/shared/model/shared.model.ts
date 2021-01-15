@@ -13,3 +13,8 @@ export interface OperationTimestampResponse {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface DateRangeResponse {
+    startAt: string | Date;
+    endAt: string | Date;
+}

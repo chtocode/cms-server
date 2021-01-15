@@ -1,7 +1,5 @@
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IApiTags } from './../../config/api-tags';
+import { ApiProperty } from '@nestjs/swagger';
 
-@ApiTags(IApiTags.Teachers)
 export class CreateTeacherDto {
     @ApiProperty()
     name: string;
@@ -12,7 +10,10 @@ export class CreateTeacherDto {
     @ApiProperty()
     phone: string;
 
-    @ApiProperty()
+    @ApiProperty({
+        type: 'SkillDto',
+        isArray: true
+    })
     skills: SkillDto[];
     
     @ApiProperty()
@@ -20,7 +21,6 @@ export class CreateTeacherDto {
 }
 
 
-@ApiTags(IApiTags.Teachers)
 export class SkillDto { 
     @ApiProperty()
     name: string;

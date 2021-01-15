@@ -1,7 +1,5 @@
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IApiTags } from '../../config/api-tags';
+import { ApiProperty } from '@nestjs/swagger';
 
-@ApiTags(IApiTags.Students)
 export class CreateStudentDto {
     @ApiProperty()
     name: string;

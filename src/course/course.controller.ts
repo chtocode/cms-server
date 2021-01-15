@@ -12,7 +12,7 @@ import {
     UseGuards,
     UseInterceptors
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IApiTags } from '../config/api-tags';
@@ -36,13 +36,13 @@ export class CourseController {
         return this.courseService.create(createCourseDto);
     }
 
-    @Get()
     @ApiQuery({ name: 'name', type: 'string', description: 'course name', required: false })
     @ApiQuery({ name: 'type', type: 'number', description: 'course type', required: false })
     @ApiQuery({ name: 'code', type: 'string', description: 'course code, correspond to uid', required: false })
     @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
     @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: true })
     @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: true })
+    @Get()
     async findAll(
         @Query('page') page: number,
         @Query('limit') limit: number,
@@ -101,13 +101,14 @@ export class CourseController {
         return this.courseService.remove(+id);
     }
 
-    @Get('schedule')
     @ApiQuery({ name: 'courseId', type: 'number', description: 'course id', required: false })
     @ApiQuery({ name: 'scheduleId', type: 'number', description: 'schedule id', required: false })
+    @Get('schedule')
     getSchedule(@Query('courseId') courseId: number, @Query('scheduleId') scheduleId: number) {
         return this.courseService.getCourseSchedule(courseId, scheduleId);
     }
 
+    @ApiBody({ type: UpdateScheduleDto, required: true })
     @Put('schedule')
     @Transaction()
     updateSchedule(@Body() updateScheduleDto: UpdateScheduleDto, @TransactionManager() manager: EntityManager) {

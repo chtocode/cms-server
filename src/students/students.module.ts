@@ -9,8 +9,12 @@ import { StudentsController } from './students.controller';
 import { StudentsService } from './students.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([StudentEntity, StudentProfileEntity, StudentCourseEntity, StudentTypeEntity]), UsersModule],
+    imports: [
+        TypeOrmModule.forFeature([StudentEntity, StudentProfileEntity, StudentCourseEntity, StudentTypeEntity]),
+        UsersModule,
+    ],
     controllers: [StudentsController],
     providers: [StudentsService],
+    exports: [StudentsService],
 })
 export class StudentsModule {}

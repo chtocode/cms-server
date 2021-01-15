@@ -1,8 +1,6 @@
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IApiTags } from '../../config/api-tags';
+import { ApiProperty } from '@nestjs/swagger';
 import { DurationUnit } from '../model/course.model';
 
-@ApiTags(IApiTags.Courses)
 export class CreateCourseDto {
     @ApiProperty()
     name: string;

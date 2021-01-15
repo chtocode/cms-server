@@ -1,8 +1,6 @@
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IApiTags } from '../../config/api-tags';
+import { ApiProperty } from '@nestjs/swagger';
 import { Role } from './../../role/role.enum';
 
-@ApiTags(IApiTags.Users)
 export class CreateUserDto {
     @ApiProperty()
     readonly email: string;

@@ -15,8 +15,9 @@ export class TeacherProfileEntity extends EntityWithTimeStamp {
      */
     @Column({
         nullable: true,
+        type: 'simple-array',
     })
-    address: string;
+    address: string[];
 
     @Column({
         type: 'enum',
@@ -56,7 +57,7 @@ export class WorkExpEntity extends EntityWithDateRange {
     @Column()
     post: string;
 
-    @ManyToOne(() => TeacherProfileEntity, (profile) => profile.workExperience)
+    @ManyToOne(() => TeacherProfileEntity, (profile) => profile.workExperience, { cascade: true })
     teacherProfile: TeacherProfileEntity;
 }
 

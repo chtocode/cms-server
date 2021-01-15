@@ -22,4 +22,7 @@ export class EntityWithDateRange {
 
     @Column({ type: 'date', transformer: transformer })
     endAt: Date;
+
+    @DeleteDateColumn({ type: 'timestamp', transformer, select: false })
+    deletedAt: Date;
 }

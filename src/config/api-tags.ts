@@ -1,5 +1,6 @@
 export enum IApiTags {
     Auth = 'Auth',
+    Common = 'Common',
     Students = 'Students',
     Teachers = 'Teachers',
     Managers = 'Managers',

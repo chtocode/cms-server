@@ -20,11 +20,11 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentsService } from './students.service';
 
+@ApiTags(IApiTags.Students)
+@ApiBearerAuth()
 @Controller(IApiTags.Students.toLowerCase())
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
-@ApiTags(IApiTags.Students)
-@ApiBearerAuth()
 export class StudentsController {
     constructor(private readonly studentsService: StudentsService) {}
 
@@ -33,11 +33,11 @@ export class StudentsController {
         return this.studentsService.create(createStudentDto);
     }
 
-    @Get()
     @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
     @ApiQuery({ name: 'query', type: 'string', description: 'student name', required: false })
     @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: false })
     @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: false })
+    @Get()
     findAll(
         @Query('query') query: string,
         @Query('userId') userId: number,

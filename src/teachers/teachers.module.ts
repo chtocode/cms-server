@@ -14,5 +14,6 @@ import { TeachersService } from './teachers.service';
     ],
     controllers: [TeachersController],
     providers: [TeachersService],
+    exports: [TeachersService],
 })
 export class TeachersModule {}

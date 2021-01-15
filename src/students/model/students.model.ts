@@ -16,7 +16,7 @@ export interface StudentsResponse extends ListResponse {
 }
 
 export interface StudentProfile {
-    address: string;
+    address: string[];
     age: number;
     avatar: string;
     country: string;

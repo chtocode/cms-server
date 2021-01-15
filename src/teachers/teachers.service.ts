@@ -125,7 +125,7 @@ export class TeachersService {
             .getRepository(CourseTypeEntity)
             .find({ where: skillNames.map((name) => ({ name })) });
         const toCreate = skills.filter((skill) => !exist.find((item) => item.name === skill.name));
-        const courseType = manager.getRepository(CourseTypeEntity);
+        const courseTypeRepo = manager.getRepository(CourseTypeEntity);
         const teacherSkillRepo = manager.getRepository(TeacherSkillEntity);
         let skillsExist: TeacherSkillEntity[] = [];
         let skillsFresh: TeacherSkillEntity[] = [];
@@ -139,7 +139,7 @@ export class TeachersService {
         }
 
         if (toCreate && toCreate.length) {
-            const toCreateCourseTypeEntities = toCreate.map((type) => courseType.create({ name: type.name }));
+            const toCreateCourseTypeEntities = toCreate.map((type) => courseTypeRepo.create({ name: type.name }));
 
             skillsFresh = skills.map((skill) => {
                 const courseType = toCreateCourseTypeEntities.find(({ name }) => name === skill.name);
