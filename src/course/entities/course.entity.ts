@@ -16,7 +16,7 @@ import { CourseScheduleEntity } from './course-schedule.entity';
 import { CourseTypeEntity } from './course-type.entity';
 import { SalesEntity } from './sales.entity';
 
-export type  CourseStatus = 0 | 1 | 2;
+export type CourseStatus = 0 | 1 | 2;
 
 @Entity()
 export class CourseEntity extends EntityWithTimeStamp {
@@ -51,7 +51,7 @@ export class CourseEntity extends EntityWithTimeStamp {
     uid: string;
 
     @Column({
-        default: 0
+        default: 0,
     })
     star: number;
 
@@ -75,7 +75,11 @@ export class CourseEntity extends EntityWithTimeStamp {
     @JoinColumn({ name: 'scheduleId' })
     schedule: CourseScheduleEntity;
 
+    @Column({ name: 'teacherId' })
+    teacherId: number;
+
     @ManyToOne(() => TeacherEntity, (teacher) => teacher.courses, { cascade: true })
+    @JoinColumn({ name: 'teacherId' })
     teacher: TeacherEntity;
 
     @ManyToMany(() => CourseTypeEntity, { cascade: true })
