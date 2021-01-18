@@ -18,3 +18,8 @@ export interface DateRangeResponse {
     startAt: string | Date;
     endAt: string | Date;
 }
+
+export interface BaseType {
+    id: number;
+    name: string;
+}

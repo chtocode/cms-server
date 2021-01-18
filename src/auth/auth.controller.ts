@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { IApiTags } from '../config/api-tags';
 import { TransformInterceptor } from '../interceptors/response.interceptors';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -19,16 +20,13 @@ export class AuthController {
         return this.authService.login(req);
     }
 
-    @Get('logout')
+    @Post('logout')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    logout(@Req() req) {
-        /**
-         * TODO:token logout logic
-         * server: add token to blacklist. Verify the token is in blacklist or not every request.
-         * client: remove token
-         */
-        return true;
+    logout(@Req() req: Request) {
+        const token = req.headers.authorization;
+
+        return this.authService.invalidToken(token);
     }
 
     @Get('userRole')

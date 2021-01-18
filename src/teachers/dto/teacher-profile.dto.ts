@@ -24,6 +24,21 @@ export class TeacherProfileDto {
 
     @ApiProperty()
     education: EducationDto[];
+
+    /**
+     * fields below in teacher entity;
+     */
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    country: string;
+
+    @ApiProperty()
+    phone: string;
+
+    @ApiProperty()
+    skills: { name: string; level: number }[];
 }
 
 class EducationDto {

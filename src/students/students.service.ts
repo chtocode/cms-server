@@ -95,37 +95,34 @@ export class StudentsService {
 
     async findOne(
         id: number,
-    ): Promise<
-        Student<CourseShort & { name: string; courseId: number; type: string; studentId: number }> & StudentProfile
-    > {
-        const { profile, type, courses, ...others } = await this.studentRepo.findOne(
+    ): Promise<Student<CourseShort & { name: string; courseId: number; studentId: number }> & StudentProfile> {
+        const { profile, courses, type, ...others } = await this.studentRepo.findOne(
             { id },
-            { relations: ['type', 'courses', 'profile', 'profile.interest', 'courses.course'] },
+            { relations: ['type', 'courses', 'profile', 'profile.interest', 'courses.course', 'courses.course.type'] },
         );
         const { id: profileId, interest, ...restProfile } = profile;
 
         return {
             ...others,
             ...restProfile,
-            typeId: type.id,
-            typeName: type.name,
+            type: { id: type.id, name: type.name },
             courses: courses.map(({ course, ...other }) => ({
                 ...other,
                 name: course.name,
                 courseId: course.id,
-                type: '', // TODO course type
                 studentId: id,
+                type: course.type,
             })),
             interest: interest.map((item) => item.name),
         };
     }
 
-    async update(id: number, updateStudentDto: UpdateStudentDto): Promise<Student> {
-        const { name, country, email, type: typeId } = updateStudentDto;
+    async update(updateStudentDto: UpdateStudentDto): Promise<Student> {
+        const { id, name, country, email, type: typeId } = updateStudentDto;
         const type = await this.studentTypeRepo.findOne({ id: typeId });
         const values = omitBy({ name, country, email, type }, (item) => !item);
 
-        await this.studentRepo.update(id, values);
+        await this.studentRepo.save({ id, ...values });
 
         const result = await this.studentRepo.findOne({ id }, { relations: ['type', 'courses', 'courses.course'] });
 
@@ -143,8 +140,7 @@ export class StudentsService {
 
         return {
             ...other,
-            typeId: type.id,
-            typeName: type.name,
+            type: type && { id: type.id, name: type.name },
             courses: courses.map(({ course, id }) => ({ id, courseId: course.id, name: course.name })),
         };
     };

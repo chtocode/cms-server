@@ -10,7 +10,7 @@ import {
     Query,
     Req,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
@@ -37,23 +37,28 @@ export class CourseController {
     }
 
     @ApiQuery({ name: 'name', type: 'string', description: 'course name', required: false })
-    @ApiQuery({ name: 'type', type: 'number', description: 'course type', required: false })
+    @ApiQuery({ name: 'type', type: 'string', description: 'course type name', required: false })
     @ApiQuery({ name: 'code', type: 'string', description: 'course code, correspond to uid', required: false })
     @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
-    @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: true })
-    @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: true })
+    @ApiQuery({ name: 'limit', type: 'number', description: 'query count. Required if page set.', required: false })
+    @ApiQuery({
+        name: 'page',
+        type: 'number',
+        description: 'current page. first page: 1. Required if limit set',
+        required: false,
+    })
     @Get()
     async findAll(
         @Query('page') page: number,
         @Query('limit') limit: number,
         @Query('name') name: string,
-        @Query('type') type: number,
-        @Query('code') code: string,
+        @Query('type') type: string,
+        @Query('uid') uid: string,
         @Query('userId') userId: number,
         @Req() req,
     ) {
         const role: Role = req.user.role;
-        const query = { name, type, code, page, limit };
+        const query = { name, type, uid, page, limit };
 
         if (role === Role.Teacher) {
             return this.courseService.findAllBelongTeacher({ ...query, userId: req.user.userId });
@@ -65,13 +70,11 @@ export class CourseController {
 
                 if (user.role === Role.Student) {
                     return this.courseService.findAllBelongStudent({ ...query, userId: req.user.userId }); // only allow view own courses;
-                }
-
-                if (user.role === Role.Teacher) {
+                } else if (user.role === Role.Teacher) {
                     return this.courseService.findAllBelongTeacher({ ...query, userId: req.user.userId });
+                } else {
+                    return this.courseService.findAll(query);
                 }
-
-                throw new BadRequestException(`Can not find user by id: ${userId}`);
             } else {
                 return this.courseService.findAll(query);
             }
@@ -84,9 +87,11 @@ export class CourseController {
                 return this.courseService.findAll(query);
             }
         }
+
+        throw new BadRequestException(`Can not find courses`);
     }
 
-    @Get('id/:id')
+    @Get('detail')
     findOne(@Query('id') id: number) {
         return this.courseService.findOne(id);
     }

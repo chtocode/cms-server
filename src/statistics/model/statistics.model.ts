@@ -1,5 +1,5 @@
-import { Course, Schedule } from "../../course/model/course.model";
-import { Role } from "../../role/role.enum";
+import { Course, Schedule } from '../../course/model/course.model';
+import { Role } from '../../role/role.enum';
 
 export interface BasicStatistics {
     total: number; //总数

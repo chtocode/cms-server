@@ -12,16 +12,15 @@ export class CreateTeacherDto {
 
     @ApiProperty({
         type: 'SkillDto',
-        isArray: true
+        isArray: true,
     })
     skills: SkillDto[];
-    
+
     @ApiProperty()
     email: string;
 }
 
-
-export class SkillDto { 
+export class SkillDto {
     @ApiProperty()
     name: string;
 

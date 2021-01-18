@@ -1,5 +1,5 @@
 import { CourseShort } from '../../course/model/course.model';
-import { ListResponse, OperationTimestampResponse } from '../../shared/model/shared.model';
+import { BaseType, ListResponse, OperationTimestampResponse } from '../../shared/model/shared.model';
 
 export interface Student<T = CourseShort> extends OperationTimestampResponse {
     country: string;
@@ -7,8 +7,7 @@ export interface Student<T = CourseShort> extends OperationTimestampResponse {
     email: string;
     id: number;
     name: string;
-    typeId: number;
-    typeName: string;
+    type: BaseType;
 }
 
 export interface StudentsResponse extends ListResponse {

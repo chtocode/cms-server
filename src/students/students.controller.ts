@@ -10,7 +10,7 @@ import {
     Query,
     Req,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -28,7 +28,7 @@ import { StudentsService } from './students.service';
 export class StudentsController {
     constructor(private readonly studentsService: StudentsService) {}
 
-    @Post('add')
+    @Post()
     create(@Body() createStudentDto: CreateStudentDto) {
         return this.studentsService.create(createStudentDto);
     }
@@ -79,9 +79,9 @@ export class StudentsController {
         return this.studentsService.findOne(+id);
     }
 
-    @Put(':id')
-    update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
-        return this.studentsService.update(+id, updateStudentDto);
+    @Put()
+    update(@Body() updateStudentDto: UpdateStudentDto) {
+        return this.studentsService.update(updateStudentDto);
     }
 
     @Delete(':id')

@@ -31,9 +31,9 @@ export class UserEntity extends EntityWithTimeStamp {
     })
     nickname: string;
 
-    @OneToMany(() => MessageEntity, message => message.to )
+    @OneToMany(() => MessageEntity, (message) => message.to)
     messages: MessageEntity[];
 
-    @OneToMany(() => MessageEntity, message => message.from )
+    @OneToMany(() => MessageEntity, (message) => message.from)
     sentMessages: MessageEntity[];
 }

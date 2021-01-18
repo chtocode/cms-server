@@ -30,7 +30,7 @@ class EnvironmentVariables {
 }
 
 /**
- * 
+ *
  * @param config env file key-value pairs
  */
 export function validate(config: Record<string, string | boolean | number>) {

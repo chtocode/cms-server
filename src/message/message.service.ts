@@ -11,7 +11,7 @@ import {
     MessageResponse,
     MessageStatisticGroup,
     MessageStatisticResponse,
-    MessageType
+    MessageType,
 } from './model/message';
 
 @Injectable()

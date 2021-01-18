@@ -1,15 +1,18 @@
 import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
+import { Connection } from 'typeorm';
 import { IS_PUBLIC_KEY } from './allow-anon';
+import { TokenBlacklistEntity } from './token-blacklist.entity';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-    constructor(private reflector: Reflector) {
+    constructor(private reflector: Reflector, private connection: Connection) {
         super();
     }
 
-    canActivate(context: ExecutionContext) {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         // Add your custom authentication logic here
         // for example, call super.logIn(request) to establish a session.
 
@@ -22,7 +25,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             return true;
         }
 
-        return super.canActivate(context);
+        const req = context.switchToHttp().getRequest<Request>();
+        const isInBlacklist = await this.connection
+            .getRepository(TokenBlacklistEntity)
+            .findOne({ token: req.headers.authorization.split('Bearer ')[1] });
+
+        if (isInBlacklist) {
+            return false;
+        }
+
+        return super.canActivate(context) as Promise<boolean>;
     }
 
     handleRequest(err, user, info) {

@@ -7,10 +7,7 @@ import { MessageService } from './message.service';
 import { MessageSubscriber } from './subscriber/message.subscriber';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([MessageEntity]),
-        UsersModule,
-    ],
+    imports: [TypeOrmModule.forFeature([MessageEntity]), UsersModule],
     controllers: [MessageController],
     providers: [MessageService, MessageSubscriber],
 })

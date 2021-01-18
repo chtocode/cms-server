@@ -50,7 +50,6 @@ export interface WorkExperience extends DateRangeResponse {
     startEnd: string;
 }
 
-
 export type AddTeacherResponse = Teacher;
 
 export type UpdateTeacherResponse = Teacher;

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { groupBy, omitBy } from 'lodash';
+import { groupBy, isEmpty, omitBy } from 'lodash';
 import { Connection, EntityManager, Repository, Transaction, TransactionManager } from 'typeorm';
 import { CourseTypeEntity } from '../course/entities/course-type.entity';
 import { Role } from '../role/role.enum';
@@ -8,11 +8,12 @@ import { StudentProfileDto } from '../students/dto/student-profile.dto';
 import { StudentProfileEntity } from '../students/entities/student-profile.entity';
 import { StudentProfile } from '../students/model/students.model';
 import { TeacherProfileDto } from '../teachers/dto/teacher-profile.dto';
+import { TeacherSkillEntity } from '../teachers/entities/teacher-skill.entity';
 import { encryptPwd } from '../utils/crypto';
 import { StudentEntity } from './../students/entities/student.entity';
 import { TeacherEduEntity, TeacherProfileEntity, WorkExpEntity } from './../teachers/entities/teacher-profile.entity';
 import { TeacherEntity } from './../teachers/entities/teacher.entity';
-import { Education, TeacherProfile, WorkExperience } from './../teachers/model/teachers.model';
+import { Skill, TeacherProfile } from './../teachers/model/teachers.model';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entity';
 
@@ -48,28 +49,30 @@ export class UsersService {
         }
 
         if (role === Role.Teacher) {
-            return this.getTeacherProfile(user);
+            return this.getTeacherProfile(user.email);
         }
 
         throw new NotFoundException(`Can not found profile by userId: ${userId}`);
     }
 
-    async getTeacherProfile(user: UserEntity): Promise<TeacherProfile> {
-        const { profile } = await this.connection
+    async getTeacherProfile(email: string, manager?: EntityManager): Promise<TeacherProfile & { skills: Skill[] }> {
+        const { profile, skills, ...rest } = await (manager || this.connection)
             .getRepository(TeacherEntity)
             .createQueryBuilder('teacher')
             .leftJoinAndSelect('teacher.profile', 'profile')
+            .leftJoinAndSelect('teacher.skills', 'skills')
+            .leftJoinAndSelect('skills.courseType', 'type')
             .leftJoinAndSelect('profile.workExperience', 'workExperience', 'workExperience.deletedAt IS NULL')
             .leftJoinAndSelect('profile.education', 'education', 'education.deletedAt IS NULL')
             .where(`teacher.email = :email`)
-            .setParameters({
-                email: user.email,
-            })
+            .setParameters({ email })
             .getOne();
         const { workExperience, education, ...others } = profile;
 
         return {
             ...others,
+            ...rest,
+            skills: skills.map(({ courseType, ...rest }) => ({ ...rest, name: courseType.name })),
             workExperience: workExperience.map((exp) => ({ ...exp, startEnd: exp.startAt + ' ' + exp.endAt })),
             education: education.map((edu) => ({ ...edu, startEnd: edu.startAt + ' ' + edu.endAt })),
         };
@@ -83,11 +86,12 @@ export class UsersService {
         const teacherProfileRepo = manager.getRepository(TeacherProfileEntity);
         const workExpRepo = manager.getRepository(WorkExpEntity);
         const eduRepo = manager.getRepository(TeacherEduEntity);
-        const { id, workExperience, education, ...others } = teacherProfileDto;
+        const { id, workExperience, education, name, skills, country, phone, ...others } = teacherProfileDto;
         const selector = teacherProfileRepo
             .createQueryBuilder('profile')
             .leftJoinAndSelect('profile.workExperience', 'work', 'work.deletedAt IS NULL')
             .leftJoinAndSelect('profile.education', 'edu', 'edu.deletedAt IS NULL')
+            .leftJoinAndSelect('profile.teacher', 'teacher')
             .where(`profile.id = ${id}`);
 
         const { workExperience: work, education: edu, ...profile } = await selector.getOne();
@@ -99,17 +103,34 @@ export class UsersService {
             omitBy(others, (item) => !item),
         );
 
-        const { workExperience: updatedWork, education: updatedEdu, ...rest } = await selector.getOne();
-        const iterator = ({ startAt, endAt, teacherProfile, ...other }) => ({
-            ...other,
-            startEnd: startAt + ' ' + endAt,
-        });
+        const teacherFields = omitBy({ country, phone, name }, (item) => !item);
 
-        return {
-            ...rest,
-            workExperience: updatedWork.map(iterator) as WorkExperience[],
-            education: updatedEdu.map(iterator) as Education[],
-        };
+        if (!isEmpty(teacherFields)) {
+            await manager.getRepository(TeacherEntity).update(profile.teacher.id, teacherFields);
+        }
+
+        if (skills) {
+            const teacher = profile.teacher;
+            const teacherRepo = manager.getRepository(TeacherEntity);
+            const teacherSkillRepo = manager.getRepository(TeacherSkillEntity);
+            const courseTypeRepo = manager.getRepository(CourseTypeEntity);
+            const exist = await manager
+                .getRepository(CourseTypeEntity)
+                .find({ where: skills.map(({ name }) => ({ name })) });
+            const toCreate = skills
+                .filter(({ name }) => !exist.find((item) => item.name === name))
+                .map(({ name }) => courseTypeRepo.create({ name }));
+            const courseTypeToUpdate = [...exist, ...toCreate];
+            const skillsToUpdate = courseTypeToUpdate.map((item) => {
+                const skill = skills.find((skill) => skill.name === item.name);
+
+                return teacherSkillRepo.create({ courseType: item, level: skill.level });
+            });
+
+            await teacherRepo.save({ id: teacher.id, skills: skillsToUpdate });
+        }
+
+        return this.getTeacherProfile(profile.teacher.email, manager);
     }
 
     async getStudentProfile(user: UserEntity): Promise<StudentProfile> {

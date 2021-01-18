@@ -30,7 +30,7 @@ export class MessageEntity extends EntityWithTimeStamp {
 
     @Column({
         type: 'enum',
-        enum: MessageTypeEnum
+        enum: MessageTypeEnum,
     })
     type: MessageType;
 }

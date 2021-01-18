@@ -13,7 +13,7 @@ import {
     Response,
     Sse,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response as ExResponse } from 'express';

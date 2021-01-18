@@ -35,7 +35,7 @@ function getCtimeStatistics(source) {
  */
 function getCourseStatistics(source) {
     return {
-        typeName: getStatisticList(countBy(source, (item) => item.type.name)),
+        type: getStatisticList(countBy(source, (item) => item.type.name)),
         createdAt: getCtimeStatistics(source),
         classTime: Object.entries(
             groupBy(
@@ -205,7 +205,7 @@ export class StatisticsService {
             .where(`year(student.createdAt) = year(now())`)
             .groupBy('month')
             .getRawMany();
-        const typeName = await stuRepo
+        const type = await stuRepo
             .createQueryBuilder('student')
             .innerJoinAndSelect('student.type', 'type')
             .select('type.name AS typeName')
@@ -231,13 +231,15 @@ export class StatisticsService {
 
         return {
             country: country.map(({ country, amount }) => ({ name: country, amount: +amount })),
-            typeName: typeName.map(({ typeName, amount }) => ({ name: typeName, amount: +amount })),
+            type: type.map(({ typeName, amount }) => ({ name: typeName, amount: +amount })),
             courses: courses.map(({ courseName, amount }) => ({ name: courseName, amount: +amount })),
             createdAt: createdAt.map(({ month, amount }) => ({ name: month, amount: +amount })),
-            interest: interest.map(({ interestName, amount }) => ({
-                name: interestName || 'unknown',
-                amount: +amount,
-            })),
+            interest: interest
+                .filter((item) => !!item.interestName)
+                .map(({ interestName, amount }) => ({
+                    name: interestName,
+                    amount: +amount,
+                })),
         };
     }
 
@@ -321,7 +323,6 @@ export class StatisticsService {
 
         return statistics;
     }
-
 
     private courseBuilder() {
         return this.connection

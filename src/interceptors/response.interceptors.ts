@@ -13,7 +13,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, IResponse<T>>
     intercept(context: ExecutionContext, next: CallHandler): Observable<IResponse<T>> {
         const [_, serverRes] = context.getArgs();
         const msg = serverRes.statusCode.toString().match(/^[23]\d+/) ? 'success' : 'fail';
-        
+
         return next.handle().pipe(map((data) => ({ data, code: serverRes.statusCode, msg })));
     }
 }

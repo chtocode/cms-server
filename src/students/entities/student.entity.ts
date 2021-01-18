@@ -34,7 +34,7 @@ export class StudentEntity extends EntityWithTimeStamp {
         name: 'profileId',
     })
     profileId: number;
-    
+
     @OneToOne(() => StudentProfileEntity, { cascade: true })
     @JoinColumn({
         name: 'profileId',

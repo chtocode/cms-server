@@ -13,4 +13,3 @@ export class CreateStudentDto {
     @ApiProperty()
     type: number;
 }
-

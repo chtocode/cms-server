@@ -65,7 +65,7 @@ export class TeachersService {
                 param: '%' + query + '%',
             })
             .getCount();
-        const result = await this.teacherRepo
+        const selector = this.teacherRepo
             .createQueryBuilder('teacher')
             .leftJoinAndSelect('teacher.courses', 'courses')
             .leftJoinAndSelect('teacher.skills', 'skills')
@@ -73,23 +73,29 @@ export class TeachersService {
             .where('teacher.name LIKE :param')
             .setParameters({
                 param: '%' + query + '%',
-            })
-            .skip((page - 1) * limit)
-            .take(limit)
-            .getMany();
+            });
+        const result =
+            page && limit
+                ? await selector
+                      .skip((page - 1) * limit)
+                      .take(limit)
+                      .getMany()
+                : await selector.getMany();
         const teachers: Teacher[] = result.map(this.transformTeacherEntityToResponse);
 
         return { total, teachers, paginator: { page, limit } };
     }
 
     async findOne(id: number): Promise<Teacher> {
-        const teacher = await this.teacherRepo.findOne(id, { relations: ['courses', 'skills', 'skills.courseType'] });
+        const teacher = await this.teacherRepo.findOne(id, {
+            relations: ['courses', 'skills', 'skills.courseType', 'profile'],
+        });
 
         return teacher ? this.transformTeacherEntityToResponse(teacher) : null;
     }
 
-    async update(id: number, updateTeacherDto: UpdateTeacherDto, manager: EntityManager): Promise<Teacher> {
-        const { name, email, country, phone } = updateTeacherDto;
+    async update(updateTeacherDto: UpdateTeacherDto, manager: EntityManager): Promise<Teacher> {
+        const { id, name, email, country, phone } = updateTeacherDto;
         let skills = null;
 
         if (updateTeacherDto.skills) {

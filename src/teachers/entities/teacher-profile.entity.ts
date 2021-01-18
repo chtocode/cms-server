@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Gender } from '../../shared/constant/gender';
 import { EntityWithDateRange, EntityWithTimeStamp, transformer } from './../../base/entity';
+import { TeacherEntity } from './teacher.entity';
 
 @Entity()
 export class TeacherProfileEntity extends EntityWithTimeStamp {
@@ -36,6 +37,7 @@ export class TeacherProfileEntity extends EntityWithTimeStamp {
 
     @Column({
         nullable: true,
+        type: 'text'
     })
     description: string;
 
@@ -44,6 +46,9 @@ export class TeacherProfileEntity extends EntityWithTimeStamp {
 
     @OneToMany(() => TeacherEduEntity, (edu) => edu.teacherProfile)
     education: TeacherEduEntity[];
+
+    @OneToOne(() => TeacherEntity, teacher => teacher.profile)
+    teacher: TeacherEntity;
 }
 
 @Entity()

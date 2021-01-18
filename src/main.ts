@@ -7,6 +7,7 @@ import * as csurf from 'csurf';
 import * as rateLimit from 'express-rate-limit';
 import * as helmet from 'helmet';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './filter/http-exception.filter';
 
 function useProd(app: INestApplication): void {
     app.use(
@@ -38,6 +39,8 @@ async function bootstrap() {
             transform: true,
         }),
     );
+
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     app.setGlobalPrefix('api');
 

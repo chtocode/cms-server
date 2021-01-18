@@ -1,10 +1,11 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { AppService } from './app.service';
 import { IApiTags } from './config/api-tags';
+import { TransformInterceptor } from './interceptors/response.interceptors';
 
 @Controller()
 @ApiTags(IApiTags.Common)
@@ -17,11 +18,13 @@ export class AppController {
     }
 
     @Get('degrees')
+    @UseInterceptors(TransformInterceptor)
     degree() {
         return this.appService.getDegrees();
     }
 
     @Get('countries')
+    @UseInterceptors(TransformInterceptor)
     countries() {
         return this.appService.getCountries();
     }

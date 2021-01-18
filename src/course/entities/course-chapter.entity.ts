@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { EntityWithTimeStamp } from './../../base/entity';
-import { CourseScheduleEntity } from "./course-schedule.entity";
+import { CourseScheduleEntity } from './course-schedule.entity';
 
 @Entity()
 export class CourseChapterEntity extends EntityWithTimeStamp {

@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { groupBy, isEmpty, isUndefined, omit, omitBy } from 'lodash';
 import { Connection, EntityManager, Repository } from 'typeorm';
 import { v4 } from 'uuid';
-import { TeacherEntity } from '../teachers/entities/teacher.entity';
-import { StudentEntity } from './../students/entities/student.entity';
+import { StudentCourseEntity } from '../students/entities/student-course.entity';
+import { TeacherEntity } from './../teachers/entities/teacher.entity';
 import { UsersService } from './../users/users.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto, UpdateScheduleDto } from './dto/update-course.dto';
@@ -13,13 +13,19 @@ import { CourseScheduleEntity } from './entities/course-schedule.entity';
 import { CourseTypeEntity } from './entities/course-type.entity';
 import { CourseEntity } from './entities/course.entity';
 import { SalesEntity } from './entities/sales.entity';
-import { Course, CourseDetailResponse, CourseResponse, Schedule } from './model/course.model';
+import {
+    Course,
+    CourseDetailResponse,
+    CourseResponse,
+    Schedule,
+    StudentOwnCoursesResponse,
+} from './model/course.model';
 
 export interface CourseQuery {
     name?: string;
-    type?: number;
-    code?: string;
-    email?: string;
+    type?: string;
+    uid?: string;
+    teacherId?: number;
     userId?: number;
     page: number;
     limit: number;
@@ -53,18 +59,25 @@ export class CourseService {
         } as CourseEntity);
     }
 
-    async findAll({ name = '', type, code = '', email, page, limit }: CourseQuery): Promise<CourseResponse> {
+    async findAll({ name = '%', type = '%', uid = '', teacherId, page, limit }: CourseQuery): Promise<CourseResponse> {
         const selector = this.courseRepo
             .createQueryBuilder('course')
-            .leftJoinAndSelect('course.teacher', 'teacher', email ? `teacher.email = ${email}` : undefined)
-            .innerJoinAndSelect('course.type', 'type', type ? `type.id = ${type}` : undefined)
-            .where(`course.name like :param ${code && 'AND course.uid = ' + code}`)
+            .leftJoinAndSelect('course.teacher', 'teacher')
+            .innerJoinAndSelect('course.type', 'type', `type.name LIKE :type`, { type: '%' + type + '%' })
+            .where(
+                `course.name like :param ${uid && "AND course.uid = '" + uid + "'"} ${
+                    (teacherId && "AND course.teacherId = '" + teacherId + "'") || ''
+                }`,
+            )
             .setParameters({ param: '%' + name + '%' });
         const total = await selector.getCount();
-        const courses = await selector
-            .skip((page - 1) * limit)
-            .take(limit)
-            .getMany();
+        const courses =
+            page && limit
+                ? await selector
+                      .skip((page - 1) * limit)
+                      .take(limit)
+                      .getMany()
+                : await selector.getMany();
 
         return {
             courses: courses.map((course) => this.transformCourseEntityToResponse(course)),
@@ -73,42 +86,49 @@ export class CourseService {
         };
     }
 
-    async findAllBelongTeacher({ name, type, code, userId, page, limit }: TeacherCourseQuery) {
+    async findAllBelongTeacher({ name, type, uid, userId, page, limit }: TeacherCourseQuery) {
         const user = await this.usersService.findOne({ id: userId });
+        const teacher = await this.connection.getRepository(TeacherEntity).findOne({ email: user.email });
 
         if (!user) {
             throw new NotFoundException(`Can not find user by id: ${userId}`);
         }
 
-        return this.findAll({ name, type, code, email: user.email, page, limit });
+        return this.findAll({ name, type, uid, teacherId: teacher.id, page, limit });
     }
 
-    async findAllBelongStudent({ name, type, code, userId, page, limit }: CourseQuery): Promise<CourseResponse> {
+    async findAllBelongStudent({
+        name = '%',
+        type = '',
+        uid = '',
+        userId,
+        page,
+        limit,
+    }: CourseQuery): Promise<StudentOwnCoursesResponse> {
         const user = await this.usersService.findOne({ id: userId });
         const selector = this.connection
-            .getRepository(StudentEntity)
-            .createQueryBuilder('student')
-            .leftJoinAndSelect('student.courses', 'courses')
+            .getRepository(StudentCourseEntity)
+            .createQueryBuilder('stuCourse')
+            .innerJoin('stuCourse.student', 'student', 'student.email = :email', { email: user.email })
             .leftJoinAndSelect(
-                'courses.course',
+                'stuCourse.course',
                 'course',
-                `course.name like :name ${code && 'AND course.uid = ' + code} ${type && 'AND type.id = ' + type}`,
+                `course.name LIKE :name ${uid && 'AND course.uid = ' + uid} ${(type && 'AND type.id = ' + type) || ''}`,
                 { name: '%' + name + '%' },
             )
             .leftJoinAndSelect('course.teacher', 'teacher')
-            .innerJoinAndSelect('course.type', 'type', type ? `type.id = ${type}` : undefined);
+            .innerJoinAndSelect('course.type', 'type', `type.name LIKE :type`, { type: '%' + type + '%' });
         const total = await selector.getCount();
-        const student = await selector
-            .where(`student.email = :email`, { email: user.email })
+        const courses = await selector
             .skip((page - 1) * limit)
             .take(limit)
             .getMany();
-        const courses = student[0]?.courses.map((item) => item.course) || [];
 
         return {
-            courses: courses.map((item) =>
-                this.transformCourseEntityToResponse(omit(item, ['schedule', 'deletedAt']) as CourseEntity),
-            ),
+            courses: courses.map(({ course, ...rest }) => ({
+                ...rest,
+                course: this.transformCourseEntityToResponse(omit(course, ['schedule', 'deletedAt']) as CourseEntity),
+            })),
             total,
             paginator: { page, limit },
         };

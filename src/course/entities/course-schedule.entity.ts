@@ -27,7 +27,7 @@ export class CourseScheduleEntity extends EntityWithTimeStamp {
      */
     @Column({
         nullable: true,
-        type: "simple-array"
+        type: 'simple-array',
     })
     classTime: string[];
 

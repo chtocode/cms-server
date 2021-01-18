@@ -9,7 +9,7 @@ import {
     Req,
     UseGuards,
     UseInterceptors,
-    UsePipes
+    UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

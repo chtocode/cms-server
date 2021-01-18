@@ -10,7 +10,7 @@ import {
     Query,
     Req,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
@@ -36,6 +36,9 @@ export class TeachersController {
         return this.teachersService.create(createTeacherDto, manager);
     }
 
+    /**
+     * TODO rate limit;
+     */
     @ApiQuery({ name: 'query', type: 'string', description: 'teacher name', required: false })
     @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: false })
     @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: false })
@@ -56,14 +59,10 @@ export class TeachersController {
     }
 
     @ApiBody({ type: UpdateTeacherDto, required: true })
-    @Put(':id')
+    @Put()
     @Transaction()
-    update(
-        @Param('id') id: string,
-        @Body() updateTeacherDto: UpdateTeacherDto,
-        @TransactionManager() manager: EntityManager,
-    ) {
-        return this.teachersService.update(+id, updateTeacherDto, manager);
+    update(@Body() updateTeacherDto: UpdateTeacherDto, @TransactionManager() manager: EntityManager) {
+        return this.teachersService.update(updateTeacherDto, manager);
     }
 
     @Delete(':id')

@@ -58,3 +58,14 @@ export interface CourseDetailResponse extends Course {
     sales: Sales;
     schedule: Schedule;
 }
+
+export interface StudentCourse {
+    id: number;
+    studentId: number;
+    courseDate: string | Date;
+    course: Course;
+}
+
+export interface StudentOwnCoursesResponse extends ListResponse {
+    courses: StudentCourse[];
+}

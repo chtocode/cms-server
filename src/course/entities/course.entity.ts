@@ -7,7 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     OneToOne,
-    PrimaryGeneratedColumn
+    PrimaryGeneratedColumn,
 } from 'typeorm';
 import { EntityWithTimeStamp, transformer } from '../../base/entity';
 import { TeacherEntity } from '../../teachers/entities/teacher.entity';
@@ -23,7 +23,9 @@ export class CourseEntity extends EntityWithTimeStamp {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({
+        default: 'http://lorempixel.com/800/600/technics/',
+    })
     cover: string;
 
     @Column()
