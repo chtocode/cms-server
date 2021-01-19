@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # sql
 /sql
+
+# client
+/client

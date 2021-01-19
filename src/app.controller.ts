@@ -14,7 +14,9 @@ export class AppController {
 
     @Get()
     index(@Res() response: Response) {
-        response.type('text/html').send(readFileSync(join(__dirname, '..', '/client/index.html')).toString());
+        response
+            .type('text/html')
+            .send(readFileSync(join(__dirname, '..', '/client/server/pages/index.html')).toString());
     }
 
     @Get('degrees')

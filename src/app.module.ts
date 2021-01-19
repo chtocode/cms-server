@@ -32,7 +32,7 @@ const envFilePath: string | string[] = process.env.NODE_ENV === 'production' ? '
         MessageModule,
         SharedModule,
         ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', 'client'),
+            rootPath: join(__dirname, '..', 'client/server/pages'),
             exclude: ['/api*'],
         }),
         StudentsModule,
