@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { endOfMonth, format, formatDistance, startOfMonth, subMonths } from 'date-fns';
 import { countBy, flatten, groupBy } from 'lodash';
 import { Connection } from 'typeorm';
+import { EntityWithDateRange } from '../base/entity';
+import { CourseTypeEntity } from '../course/entities/course-type.entity';
 import { Role } from '../role/role.enum';
 import { Gender } from '../shared/constant/gender';
 import { Student, StudentProfile } from '../students/model/students.model';
@@ -15,16 +17,18 @@ import { TeacherEntity } from './../teachers/entities/teacher.entity';
 import { UserEntity } from './../users/entities/user.entity';
 import { Statistic, StatisticsOverviewResponse } from './model/statistics.model';
 
-function getStatisticList(obj) {
+type TransformedCourseEntity = Omit<CourseEntity, 'type'> & { type: CourseTypeEntity };
+
+function getStatisticList(obj: { [key: string]: number }) {
     return Object.entries(obj).map(([name, amount]) => ({ name, amount }));
 }
 
-function getCtimeStatistics(source) {
+function getCtimeStatistics(source: TransformedCourseEntity[]) {
     return getStatisticList(
         countBy(source, (item) => {
-            const index = item.createdAt.lastIndexOf('-');
+            const index = ((item.createdAt as unknown) as string).lastIndexOf('-');
 
-            return item.createdAt.slice(0, index);
+            return ((item.createdAt as unknown) as string).slice(0, index);
         }),
     );
 }
@@ -33,7 +37,7 @@ function getCtimeStatistics(source) {
  * @function getCourseStatistics
  * @param {Course[]} source - course collections
  */
-function getCourseStatistics(source) {
+function getCourseStatistics(source: TransformedCourseEntity[]) {
     return {
         type: getStatisticList(countBy(source, (item) => item.type.name)),
         createdAt: getCtimeStatistics(source),
@@ -55,8 +59,8 @@ function getCourseStatistics(source) {
     };
 }
 
-function getDuration(data, key = 'startEnd') {
-    const dates = data.map((item) => [item.startAt, item.endAt]).flat();
+function getDuration(data: EntityWithDateRange[], key = 'startEnd'): string {
+    const dates: (string | Date)[] = flatten(data.map((item) => [item.startAt, item.endAt]));
     const { max, min } = dates.reduce(
         (acc, cur) => {
             const date = new Date(cur).getTime();
