@@ -25,12 +25,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             return true;
         }
 
-        const req = context.switchToHttp().getRequest<Request>();
-        const isInBlacklist = await this.connection
-            .getRepository(TokenBlacklistEntity)
-            .findOne({ token: req.headers.authorization.split('Bearer ')[1] });
+        try {
+            const req = context.switchToHttp().getRequest<Request>();
+            const isInBlacklist = await this.connection
+                .getRepository(TokenBlacklistEntity)
+                .findOne({ token: req.headers.authorization.split('Bearer ')[1] });
 
-        if (isInBlacklist) {
+            if (isInBlacklist) {
+                return false;
+            }
+        } catch (error) {
             return false;
         }
 
