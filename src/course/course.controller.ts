@@ -10,7 +10,7 @@ import {
     Query,
     Req,
     UseGuards,
-    UseInterceptors,
+    UseInterceptors
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
@@ -38,7 +38,7 @@ export class CourseController {
 
     @ApiQuery({ name: 'name', type: 'string', description: 'course name', required: false })
     @ApiQuery({ name: 'type', type: 'string', description: 'course type name', required: false })
-    @ApiQuery({ name: 'code', type: 'string', description: 'course code, correspond to uid', required: false })
+    @ApiQuery({ name: 'uid', type: 'string', description: 'course code, correspond to uid', required: false })
     @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
     @ApiQuery({ name: 'limit', type: 'number', description: 'query count. Required if page set.', required: false })
     @ApiQuery({
