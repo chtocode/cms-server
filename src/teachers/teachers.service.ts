@@ -73,7 +73,9 @@ export class TeachersService {
             .where('teacher.name LIKE :param')
             .setParameters({
                 param: '%' + query + '%',
-            });
+            })
+            .orderBy('teacher.id');
+
         const result =
             page && limit
                 ? await selector

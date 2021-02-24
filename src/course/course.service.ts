@@ -18,7 +18,7 @@ import {
     CourseDetailResponse,
     CourseResponse,
     Schedule,
-    StudentOwnCoursesResponse,
+    StudentOwnCoursesResponse
 } from './model/course.model';
 
 export interface CourseQuery {
@@ -69,7 +69,9 @@ export class CourseService {
                     (teacherId && "AND course.teacherId = '" + teacherId + "'") || ''
                 }`,
             )
-            .setParameters({ param: '%' + name + '%' });
+            .setParameters({ param: '%' + name + '%' })
+            .orderBy('course.id');
+            
         const total = await selector.getCount();
         const courses =
             page && limit
@@ -120,6 +122,7 @@ export class CourseService {
             .innerJoinAndSelect('course.type', 'type', `type.name LIKE :type`, { type: '%' + type + '%' });
         const total = await selector.getCount();
         const courses = await selector
+            .orderBy('stuCourse.id')
             .skip((page - 1) * limit)
             .take(limit)
             .getMany();

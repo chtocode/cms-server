@@ -60,6 +60,7 @@ export class StudentsService {
             .leftJoinAndSelect('student.type', 'type')
             .where(`student.name LIKE :param AND courses.courseId IN (${courseIds})`)
             .setParameters({ param: '%' + query + '%' })
+            .orderBy('student.id')
             .skip((page - 1) * limit)
             .take(limit)
             .getMany();
@@ -85,6 +86,7 @@ export class StudentsService {
             .setParameters({
                 param: '%' + query + '%',
             })
+            .orderBy('student.id')
             .skip((page - 1) * limit)
             .take(limit)
             .getMany();
