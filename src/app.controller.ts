@@ -1,8 +1,6 @@
 import { Controller, Get, Res, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { AppService } from './app.service';
 import { IApiTags } from './config/api-tags';
 import { TransformInterceptor } from './interceptors/response.interceptors';
@@ -14,9 +12,7 @@ export class AppController {
 
     @Get()
     index(@Res() response: Response) {
-        response
-            .type('text/html')
-            .send(readFileSync(join(__dirname, '..', '/client/server/pages/index.html')).toString());
+        response.redirect('https://cms-lyart.vercel.app');
     }
 
     @Get('degrees')

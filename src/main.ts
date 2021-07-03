@@ -54,7 +54,7 @@ async function bootstrap() {
         .setTitle('CMS')
         .setDescription('Course Manager System')
         .setVersion('1.0')
-        .addServer('http://')
+        .addServer(isProd ? 'https://' : 'http://')
         .addTag('cms', 'cms public api')
         .addBearerAuth()
         .build();

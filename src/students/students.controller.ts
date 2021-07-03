@@ -35,8 +35,8 @@ export class StudentsController {
 
     @ApiQuery({ name: 'userId', type: 'number', description: 'user id', required: false })
     @ApiQuery({ name: 'query', type: 'string', description: 'student name', required: false })
-    @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: false })
-    @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: false })
+    @ApiQuery({ name: 'limit', type: 'number', description: 'query count', required: true })
+    @ApiQuery({ name: 'page', type: 'number', description: 'current page. first page: 1', required: true })
     @Get()
     findAll(
         @Query('query') query: string,

@@ -269,7 +269,7 @@ export class StatisticsService {
             .leftJoinAndSelect('skills.courseType', 'skill')
             .select(['skill.name as name', 'skills.level as level'])
             .getRawMany();
-        const skills = skillsSource.reduce((acc, cur) => {
+        const skills: { [key: string]: { name: string; amount: number }[] } = skillsSource.reduce((acc, cur) => {
             const { name, level } = cur;
 
             if (acc.hasOwnProperty(name)) {

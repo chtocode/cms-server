@@ -1,6 +1,35 @@
 {
     "cSpell.words": [
         "microservices",
+        "prebuild",
         "signup"
+    ],
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "dev",
+            "database": "cms",
+            "username": "root",
+            "password": "honey_badger"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "cms",
+            "database": "cms",
+            "username": "root",
+            "password": "honey_badger"
+        }
     ]
 }
