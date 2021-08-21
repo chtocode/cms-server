@@ -1,3 +1,4 @@
+import { HttpException } from '@nestjs/common';
 import {
     BadRequestException,
     Body,
@@ -86,6 +87,10 @@ export class StudentsController {
 
     @Delete(':id')
     remove(@Param('id') id: string) {
+        if (+id === 1) {
+            throw new HttpException('Permission denied. You are forbidden to remove this student.', 403);
+        }
+
         return this.studentsService.remove(+id);
     }
 }

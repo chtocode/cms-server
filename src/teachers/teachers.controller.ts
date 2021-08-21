@@ -4,6 +4,7 @@ import {
     Controller,
     Delete,
     Get,
+    HttpException,
     Param,
     Post,
     Put,
@@ -67,6 +68,10 @@ export class TeachersController {
 
     @Delete(':id')
     remove(@Param('id') id: string) {
+        if (+id === 1) {
+            throw new HttpException('Permission denied. You are forbidden to remove this teacher.', 403);
+        }
+
         return this.teachersService.remove(+id);
     }
 }
