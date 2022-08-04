@@ -68,7 +68,7 @@ export class TeachersController {
 
     @Delete(':id')
     remove(@Param('id') id: string) {
-        if (+id === 1) {
+        if (+id < 5) {
             throw new HttpException('Permission denied. You are forbidden to remove this teacher.', 403);
         }
 
